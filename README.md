@@ -87,13 +87,13 @@ Si no despliegas la función, puedes crear usuarios manualmente desde Supabase A
 La app está configurada para publicarse bajo:
 
 ```text
-https://<usuario>.github.io/quiniela-mundial-2026/
+https://<usuario>.github.io/quinielas_minigrip/
 ```
 
 `vite.config.js` usa:
 
 ```js
-base: '/quiniela-mundial-2026/'
+base: '/quinielas_minigrip/'
 ```
 
 Para publicar:
