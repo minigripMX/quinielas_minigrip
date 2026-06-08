@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #07110b;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@layer components {
+  .section {
+    @apply rounded-md border border-line bg-panel p-4 shadow-glow;
+  }
+
+  .tab-button {
+    @apply flex shrink-0 items-center gap-2 rounded px-3 py-2 text-sm font-bold text-slate-300 transition hover:bg-panelSoft hover:text-white;
+  }
+
+  .tab-active {
+    @apply bg-accent text-pitch hover:bg-accent hover:text-pitch;
+  }
+
+  .icon-button {
+    @apply grid h-10 w-10 place-items-center rounded border border-line bg-panelSoft text-slate-200 transition hover:border-accent hover:text-accent;
+  }
+
+  .primary-button {
+    @apply inline-flex items-center justify-center rounded bg-accent px-4 py-2 text-sm font-black text-pitch transition hover:bg-gold disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .danger-button {
+    @apply rounded border border-red-500/40 px-3 py-1 text-xs font-bold text-red-300 transition hover:bg-red-500/10;
+  }
+
+  .field-label {
+    @apply block text-sm font-bold text-slate-300;
+  }
+
+  .field-input {
+    @apply mt-1 w-full rounded border border-line bg-pitch px-3 py-2 text-white outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20;
+  }
+
+  .data-table {
+    @apply w-full min-w-[680px] border-separate border-spacing-0 text-sm;
+  }
+
+  .data-table th {
+    @apply border-b border-line px-3 py-3 text-left text-xs uppercase tracking-wide text-slate-400;
+  }
+
+  .data-table td {
+    @apply border-b border-line/70 px-3 py-3 text-slate-200;
+  }
+
+  .match-grid {
+    @apply grid gap-3 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .match-card {
+    @apply rounded-md border border-line bg-panelSoft p-4;
+  }
+
+  .match-meta {
+    @apply mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-slate-400;
+  }
+
+  .locked {
+    @apply inline-flex items-center gap-1 text-gold;
+  }
+
+  .teams {
+    @apply grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center text-sm;
+  }
+
+  .teams span {
+    @apply rounded bg-pitch px-2 py-1 text-xs font-black text-gold;
+  }
+
+  .pick-row {
+    @apply mt-4 grid grid-cols-3 gap-2;
+  }
+
+  .pick-button {
+    @apply rounded border border-line bg-pitch py-2 font-black text-slate-200 transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .pick-selected {
+    @apply border-accent bg-accent text-pitch hover:text-pitch;
+  }
+
+  .result-hit {
+    @apply mt-3 inline-flex items-center gap-2 text-sm font-bold text-accent;
+  }
+
+  .result-miss {
+    @apply mt-3 inline-flex items-center gap-2 text-sm font-bold text-red-300;
+  }
+
+  .vote-counts {
+    @apply mt-4 grid grid-cols-3 gap-2 text-center text-sm font-black text-slate-200;
+  }
+
+  .vote-counts span {
+    @apply rounded bg-pitch py-2;
+  }
+
+  .admin-row {
+    @apply grid gap-3 rounded-md border border-line bg-panelSoft p-3 md:grid-cols-[1fr_auto] md:items-center;
+  }
+
+  .score-inputs {
+    @apply flex items-center gap-2;
+  }
+
+  .score-inputs input {
+    @apply h-10 w-16 rounded border border-line bg-pitch text-center font-black text-white outline-none focus:border-accent;
+  }
+
+  .notice {
+    @apply rounded border border-accent/30 bg-accent/10 px-3 py-2 text-sm font-semibold text-slate-200;
+  }
+
+  .notice-danger {
+    @apply border-red-500/40 bg-red-500/10 text-red-200;
+  }
+}
