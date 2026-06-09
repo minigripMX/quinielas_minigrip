@@ -112,6 +112,12 @@ Este comando ejecuta `npm run build` y publica `dist` con `gh-pages`. El archivo
 - Un trigger bloquea picks si el partido ya tiene resultado.
 - Solo admins gestionan resultados y usuarios.
 
-## Partidos seed
+## Mundial completo
 
-`supabase/schema.sql` incluye 24 partidos de fase de grupos en Grupos A-D. Como el HTML original no estaba presente en el repo, el seed usa una lista coherente con los equipos indicados. Si la lista del HTML difiere, actualiza los `insert into public.matches`.
+`supabase/schema.sql` crea la estructura base. Si ya tienes la app funcionando y quieres cargar el Mundial completo, ejecuta después:
+
+```text
+supabase/full-world-cup-2026.sql
+```
+
+Ese script reemplaza los partidos actuales por 104 slots: 72 de fase de grupos, 16 de ronda de 32, 8 de octavos, 4 de cuartos, 2 semifinales, tercer lugar y final. Conserva usuarios/perfiles, pero borra picks/results existentes porque dependen de los partidos anteriores.

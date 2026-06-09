@@ -202,7 +202,7 @@ function MyPicks({ profile, data }) {
           return (
             <article className="match-card" key={match.id}>
               <div className="match-meta">
-                <span>Grupo {match.group_name}</span>
+                <span>{getMatchLabel(match)}</span>
                 {resolved ? <span className="locked"><Lock size={13} /> Cerrado</span> : <span>Abierto</span>}
               </div>
               <div className="teams">
@@ -244,7 +244,7 @@ function Matches({ data }) {
       <SectionTitle icon={CalendarDays} title="Partidos" />
       {Object.entries(groups).map(([group, matches]) => (
         <div className="section" key={group}>
-          <h3 className="mb-4 text-lg font-black text-gold">Grupo {group}</h3>
+          <h3 className="mb-4 text-lg font-black text-gold">{group}</h3>
           <div className="match-grid">
             {matches.map((match) => {
               const result = data.resultByMatch.get(match.id);
@@ -421,7 +421,7 @@ function ResultForm({ data, match, result }) {
     <form className="admin-row" onSubmit={saveResult}>
       <div>
         <p className="font-semibold">{match.home_team} vs {match.away_team}</p>
-        <p className="text-xs text-slate-400">Grupo {match.group_name}</p>
+        <p className="text-xs text-slate-400">{getMatchLabel(match)}</p>
       </div>
       <div className="score-inputs">
         <input min="0" required type="number" value={home} onChange={(event) => setHome(event.target.value)} />
@@ -558,10 +558,23 @@ function ConfigWarning() {
 
 function groupMatches(matches) {
   return matches.reduce((groups, match) => {
-    groups[match.group_name] = groups[match.group_name] ?? [];
-    groups[match.group_name].push(match);
+    const groupKey = getMatchGroupTitle(match);
+    groups[groupKey] = groups[groupKey] ?? [];
+    groups[groupKey].push(match);
     return groups;
   }, {});
+}
+
+function getMatchLabel(match) {
+  if (match.stage === 'group') return `Grupo ${match.group_name}`;
+  if (match.round_label) return match.round_label;
+  return match.group_name ? `Grupo ${match.group_name}` : 'Partido';
+}
+
+function getMatchGroupTitle(match) {
+  if (match.stage === 'group') return `Grupo ${match.group_name}`;
+  if (match.round_label) return match.round_label;
+  return match.group_name ? `Grupo ${match.group_name}` : 'Partidos';
 }
 
 function countPicks(picks) {

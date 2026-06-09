@@ -18,7 +18,7 @@ export function useQuinielaData() {
     setError('');
 
     const [matchesRes, picksRes, resultsRes, profilesRes] = await Promise.all([
-      supabase.from('matches').select('*').order('group_name').order('match_date'),
+      supabase.from('matches').select('*').order('match_date').order('group_name'),
       supabase.from('picks').select('*'),
       supabase.from('results').select('*'),
       supabase.from('profiles').select('*').order('name'),
