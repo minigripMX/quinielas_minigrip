@@ -128,4 +128,106 @@ body {
   .notice-danger {
     @apply border-red-500/40 bg-red-500/10 text-red-200;
   }
+
+  .bracket-scroll {
+    @apply overflow-x-auto rounded-md border border-line bg-pitch p-3;
+  }
+
+  .bracket-board {
+    @apply min-w-[1120px] rounded-md bg-slate-100 p-5 text-slate-900;
+  }
+
+  .bracket-labels {
+    @apply grid grid-cols-9 items-center pb-5 text-center text-lg font-black uppercase text-slate-500;
+  }
+
+  .bracket-content {
+    @apply relative grid grid-cols-[22px_1fr_150px_1fr_22px] items-center gap-3;
+  }
+
+  .pathway-label {
+    @apply flex h-full items-center justify-center text-sm font-black uppercase tracking-wide text-slate-500;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .pathway-right {
+    transform: none;
+  }
+
+  .bracket-side {
+    @apply grid grid-cols-4 items-center gap-5;
+  }
+
+  .bracket-side-right {
+    @apply grid-cols-4;
+  }
+
+  .bracket-round {
+    @apply relative grid gap-4;
+  }
+
+  .bracket-round-1 {
+    @apply gap-4;
+  }
+
+  .bracket-round-2 {
+    @apply gap-12;
+  }
+
+  .bracket-round-3 {
+    @apply gap-36;
+  }
+
+  .bracket-round-4 {
+    @apply gap-0;
+  }
+
+  .bracket-pill {
+    @apply relative z-10 flex h-[46px] w-[106px] flex-col items-center justify-center rounded-md px-2 text-center text-[11px] font-black leading-tight text-white shadow-md;
+  }
+
+  .bracket-pill strong {
+    @apply text-base leading-none;
+  }
+
+  .bracket-pill span {
+    @apply mt-0.5 uppercase;
+  }
+
+  .bracket-blue {
+    @apply bg-blue-600;
+  }
+
+  .bracket-teal {
+    @apply bg-teal-400 text-slate-950;
+  }
+
+  .bracket-green {
+    @apply bg-green-500 text-slate-950;
+  }
+
+  .bracket-red {
+    @apply bg-red-600;
+  }
+
+  .bracket-pink {
+    @apply bg-pink-600;
+  }
+
+  .bracket-gold {
+    @apply bg-blue-500;
+  }
+
+  .bracket-orange {
+    @apply bg-orange-500 text-slate-950;
+  }
+
+  .final-stack {
+    @apply flex flex-col items-center justify-center gap-4;
+  }
+
+  .trophy-mark {
+    @apply grid h-24 w-24 place-items-center rounded-md bg-slate-950 text-gold;
+  }
 }

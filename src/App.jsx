@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   CalendarDays,
   Check,
+  GitFork,
   Lock,
   LogOut,
   Medal,
@@ -20,6 +21,7 @@ const tabs = [
   { id: 'ranking', label: 'Tabla', icon: Trophy },
   { id: 'quiniela', label: 'Mi quiniela', icon: Check },
   { id: 'partidos', label: 'Partidos', icon: CalendarDays },
+  { id: 'llaves', label: 'Llaves', icon: GitFork },
   { id: 'resultados', label: 'Resultados', icon: Shield, admin: true },
   { id: 'usuarios', label: 'Usuarios', icon: Users, admin: true },
 ];
@@ -91,6 +93,7 @@ function Dashboard({ profile }) {
         {!data.loading && active === 'ranking' ? <Ranking stats={data.stats} /> : null}
         {!data.loading && active === 'quiniela' ? <MyPicks profile={profile} data={data} /> : null}
         {!data.loading && active === 'partidos' ? <Matches data={data} /> : null}
+        {!data.loading && active === 'llaves' ? <KnockoutBoard /> : null}
         {!data.loading && active === 'resultados' ? <ResultsAdmin data={data} /> : null}
         {!data.loading && active === 'usuarios' ? <UsersAdmin data={data} /> : null}
       </main>
@@ -271,6 +274,112 @@ function Matches({ data }) {
         </div>
       ))}
     </section>
+  );
+}
+
+const leftBracket = [
+  [
+    { id: 'M74', detail: '1E vs 3ABCDF', tone: 'blue' },
+    { id: 'M72', detail: '1I vs 3CDFGH', tone: 'blue' },
+    { id: 'M73', detail: '2A vs 2B', tone: 'blue' },
+    { id: 'M75', detail: '1F vs 2C', tone: 'blue' },
+    { id: 'M83', detail: '2K vs 2L', tone: 'teal' },
+    { id: 'M84', detail: '1H vs 2J', tone: 'teal' },
+    { id: 'M81', detail: '1D vs 3EFIJ', tone: 'teal' },
+    { id: 'M82', detail: '1G vs 3AEHJ', tone: 'teal' },
+  ],
+  [
+    { id: 'M89', detail: 'W74 vs W77', tone: 'blue' },
+    { id: 'M90', detail: 'W73 vs W75', tone: 'blue' },
+    { id: 'M93', detail: 'W83 vs W84', tone: 'teal' },
+    { id: 'M94', detail: 'W81 vs W82', tone: 'teal' },
+  ],
+  [
+    { id: 'M97', detail: 'W89 vs W90', tone: 'blue' },
+    { id: 'M98', detail: 'W93 vs W94', tone: 'teal' },
+  ],
+  [{ id: 'M101', detail: 'W97 vs W98', tone: 'pink' }],
+];
+
+const rightBracket = [
+  [{ id: 'M102', detail: 'W99 vs W100', tone: 'pink' }],
+  [
+    { id: 'M99', detail: 'W91 vs W92', tone: 'green' },
+    { id: 'M100', detail: 'W95 vs W96', tone: 'red' },
+  ],
+  [
+    { id: 'M91', detail: 'W76 vs W78', tone: 'green' },
+    { id: 'M92', detail: 'W79 vs W80', tone: 'green' },
+    { id: 'M95', detail: 'W86 vs W88', tone: 'red' },
+    { id: 'M96', detail: 'W85 vs W87', tone: 'red' },
+  ],
+  [
+    { id: 'M76', detail: '1O vs 2F', tone: 'green' },
+    { id: 'M78', detail: '2E vs 2I', tone: 'green' },
+    { id: 'M79', detail: '1A vs 3CEFH', tone: 'green' },
+    { id: 'M80', detail: '1L vs 3EHJK', tone: 'green' },
+    { id: 'M86', detail: '1J vs 2H', tone: 'red' },
+    { id: 'M88', detail: '2D vs 2G', tone: 'red' },
+    { id: 'M85', detail: '1B vs 3EFGJ', tone: 'red' },
+    { id: 'M87', detail: '1K vs 3DEJL', tone: 'red' },
+  ],
+];
+
+const roundLabels = ['R32', 'R16', 'QF', 'SF'];
+
+function KnockoutBoard() {
+  return (
+    <section className="section">
+      <SectionTitle icon={GitFork} title="Llaves de eliminacion" />
+      <div className="bracket-scroll">
+        <div className="bracket-board">
+          <div className="bracket-labels">
+            {['R32', 'R16', 'QF', 'SF', 'Final', 'SF', 'QF', 'R16', 'R32'].map((label, index) => (
+              <span key={`${label}-${index}`}>{label}</span>
+            ))}
+          </div>
+
+          <div className="bracket-content">
+            <div className="pathway-label">Pathway 1</div>
+            <BracketSide columns={leftBracket} side="left" />
+
+            <div className="final-stack">
+              <div className="trophy-mark">
+                <Trophy size={44} />
+              </div>
+              <MatchPill match={{ id: 'M104', detail: 'Final', tone: 'gold' }} />
+              <MatchPill match={{ id: 'M103', detail: 'Bronze final', tone: 'orange' }} />
+            </div>
+
+            <BracketSide columns={rightBracket} side="right" />
+            <div className="pathway-label pathway-right">Pathway 2</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BracketSide({ columns, side }) {
+  return (
+    <div className={`bracket-side ${side === 'right' ? 'bracket-side-right' : ''}`}>
+      {columns.map((round, index) => (
+        <div className={`bracket-round bracket-round-${index + 1}`} key={`${side}-${roundLabels[index]}`}>
+          {round.map((match) => (
+            <MatchPill key={match.id} match={match} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MatchPill({ match }) {
+  return (
+    <div className={`bracket-pill bracket-${match.tone}`}>
+      <strong>{match.id}</strong>
+      <span>{match.detail}</span>
+    </div>
   );
 }
 
