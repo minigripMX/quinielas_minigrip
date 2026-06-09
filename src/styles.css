@@ -69,6 +69,30 @@ body {
     @apply mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-slate-400;
   }
 
+  .match-meta-left {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .match-number {
+    @apply rounded bg-gold px-2 py-0.5 font-black text-pitch;
+  }
+
+  .match-number-inline {
+    @apply mr-2 rounded bg-gold px-2 py-0.5 text-xs font-black text-pitch;
+  }
+
+  .phase-filter {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .phase-button {
+    @apply rounded border border-line bg-pitch px-3 py-2 text-sm font-black text-slate-300 transition hover:border-accent hover:text-accent;
+  }
+
+  .phase-active {
+    @apply border-accent bg-accent text-pitch hover:text-pitch;
+  }
+
   .locked {
     @apply inline-flex items-center gap-1 text-gold;
   }

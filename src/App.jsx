@@ -26,6 +26,12 @@ const tabs = [
   { id: 'usuarios', label: 'Usuarios', icon: Users, admin: true },
 ];
 
+const phaseFilters = [
+  { id: 'all', label: 'Todos' },
+  { id: 'group', label: 'Fase de grupos' },
+  { id: 'knockout', label: 'Eliminatorias' },
+];
+
 function App() {
   if (!isSupabaseConfigured) {
     return <ConfigWarning />;
@@ -172,10 +178,13 @@ function Ranking({ stats }) {
 }
 
 function MyPicks({ profile, data }) {
+  const [phase, setPhase] = useState('group');
   const myPicks = useMemo(
     () => new Map(data.picks.filter((pick) => pick.user_id === profile.id).map((pick) => [pick.match_id, pick])),
     [data.picks, profile.id],
   );
+  const visibleMatches = filterMatchesByPhase(data.matches, phase);
+  const groups = groupMatches(visibleMatches);
 
   async function savePick(matchId, pick) {
     if (data.resultByMatch.has(matchId)) return;
@@ -190,58 +199,69 @@ function MyPicks({ profile, data }) {
   }
 
   return (
-    <section className="section">
+    <section className="space-y-5">
+      <div className="section">
       <SectionTitle icon={Check} title="Mi quiniela" />
-      <div className="match-grid">
-        {data.matches.map((match) => {
-          const result = data.resultByMatch.get(match.id);
-          const selected = myPicks.get(match.id)?.pick;
-          const resolved = Boolean(result);
-          const hit = resolved && selected === result.outcome;
-
-          return (
-            <article className="match-card" key={match.id}>
-              <div className="match-meta">
-                <span>{getMatchLabel(match)}</span>
-                {resolved ? <span className="locked"><Lock size={13} /> Cerrado</span> : <span>Abierto</span>}
-              </div>
-              <div className="teams">
-                <strong>{match.home_team}</strong>
-                <span>vs</span>
-                <strong>{match.away_team}</strong>
-              </div>
-              <div className="pick-row">
-                {['1', 'x', '2'].map((pick) => (
-                  <button
-                    className={`pick-button ${selected === pick ? 'pick-selected' : ''}`}
-                    disabled={resolved}
-                    key={pick}
-                    onClick={() => savePick(match.id, pick)}
-                  >
-                    {formatPick(pick)}
-                  </button>
-                ))}
-              </div>
-              {resolved ? (
-                <p className={hit ? 'result-hit' : 'result-miss'}>
-                  {hit ? <Check size={16} /> : <X size={16} />}
-                  Resultado {result.score_home}-{result.score_away}
-                </p>
-              ) : null}
-            </article>
-          );
-        })}
+        <PhaseFilter value={phase} onChange={setPhase} />
       </div>
+
+      {Object.entries(groups).map(([group, matches]) => (
+        <div className="section" key={group}>
+          <h3 className="mb-4 text-lg font-black text-gold">{group}</h3>
+          <div className="match-grid">
+            {matches.map((match) => {
+              const result = data.resultByMatch.get(match.id);
+              const selected = myPicks.get(match.id)?.pick;
+              const resolved = Boolean(result);
+              const hit = resolved && selected === result.outcome;
+
+              return (
+                <article className="match-card" key={match.id}>
+                  <MatchMeta match={match} right={resolved ? <span className="locked"><Lock size={13} /> Cerrado</span> : <span>Abierto</span>} />
+                  <div className="teams">
+                    <strong>{match.home_team}</strong>
+                    <span>vs</span>
+                    <strong>{match.away_team}</strong>
+                  </div>
+                  <div className="pick-row">
+                    {['1', 'x', '2'].map((pick) => (
+                      <button
+                        className={`pick-button ${selected === pick ? 'pick-selected' : ''}`}
+                        disabled={resolved}
+                        key={pick}
+                        onClick={() => savePick(match.id, pick)}
+                      >
+                        {formatPick(pick)}
+                      </button>
+                    ))}
+                  </div>
+                  {resolved ? (
+                    <p className={hit ? 'result-hit' : 'result-miss'}>
+                      {hit ? <Check size={16} /> : <X size={16} />}
+                      Resultado {result.score_home}-{result.score_away}
+                    </p>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </section>
   );
 }
 
 function Matches({ data }) {
-  const groups = groupMatches(data.matches);
+  const [phase, setPhase] = useState('group');
+  const visibleMatches = filterMatchesByPhase(data.matches, phase);
+  const groups = groupMatches(visibleMatches);
 
   return (
     <section className="space-y-5">
-      <SectionTitle icon={CalendarDays} title="Partidos" />
+      <div className="section">
+        <SectionTitle icon={CalendarDays} title="Partidos" />
+        <PhaseFilter value={phase} onChange={setPhase} />
+      </div>
       {Object.entries(groups).map(([group, matches]) => (
         <div className="section" key={group}>
           <h3 className="mb-4 text-lg font-black text-gold">{group}</h3>
@@ -251,10 +271,7 @@ function Matches({ data }) {
               const counts = countPicks(data.picksByMatch.get(match.id) ?? []);
               return (
                 <article className="match-card" key={match.id}>
-                  <div className="match-meta">
-                    <span>{new Date(match.match_date).toLocaleDateString('es-MX')}</span>
-                    <span>{result ? 'Final' : 'Votos'}</span>
-                  </div>
+                  <MatchMeta match={match} right={<span>{result ? 'Final' : 'Votos'}</span>} />
                   <div className="teams">
                     <strong>{match.home_team}</strong>
                     <span>{result ? `${result.score_home}-${result.score_away}` : 'vs'}</span>
@@ -384,14 +401,27 @@ function MatchPill({ match }) {
 }
 
 function ResultsAdmin({ data }) {
+  const [phase, setPhase] = useState('group');
+  const visibleMatches = filterMatchesByPhase(data.matches, phase);
+  const groups = groupMatches(visibleMatches);
+
   return (
-    <section className="section">
-      <SectionTitle icon={Shield} title="Resultados" />
-      <div className="space-y-3">
-        {data.matches.map((match) => (
-          <ResultForm data={data} key={match.id} match={match} result={data.resultByMatch.get(match.id)} />
-        ))}
+    <section className="space-y-5">
+      <div className="section">
+        <SectionTitle icon={Shield} title="Resultados" />
+        <PhaseFilter value={phase} onChange={setPhase} />
       </div>
+
+      {Object.entries(groups).map(([group, matches]) => (
+        <div className="section" key={group}>
+          <h3 className="mb-4 text-lg font-black text-gold">{group}</h3>
+          <div className="space-y-3">
+            {matches.map((match) => (
+              <ResultForm data={data} key={match.id} match={match} result={data.resultByMatch.get(match.id)} />
+            ))}
+          </div>
+        </div>
+      ))}
     </section>
   );
 }
@@ -420,7 +450,7 @@ function ResultForm({ data, match, result }) {
   return (
     <form className="admin-row" onSubmit={saveResult}>
       <div>
-        <p className="font-semibold">{match.home_team} vs {match.away_team}</p>
+        <p className="font-semibold"><span className="match-number-inline">{formatMatchNumber(match)}</span> {match.home_team} vs {match.away_team}</p>
         <p className="text-xs text-slate-400">{getMatchLabel(match)}</p>
       </div>
       <div className="score-inputs">
@@ -540,6 +570,36 @@ function SectionTitle({ icon: Icon, title }) {
   );
 }
 
+function PhaseFilter({ value, onChange }) {
+  return (
+    <div className="phase-filter">
+      {phaseFilters.map((filter) => (
+        <button
+          className={`phase-button ${value === filter.id ? 'phase-active' : ''}`}
+          key={filter.id}
+          onClick={() => onChange(filter.id)}
+          type="button"
+        >
+          {filter.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MatchMeta({ match, right }) {
+  return (
+    <div className="match-meta">
+      <span className="match-meta-left">
+        <span className="match-number">{formatMatchNumber(match)}</span>
+        <span>{getMatchLabel(match)}</span>
+        <span>{new Date(match.match_date).toLocaleDateString('es-MX')}</span>
+      </span>
+      {right}
+    </div>
+  );
+}
+
 function Notice({ children, tone = 'info' }) {
   return <div className={`notice ${tone === 'danger' ? 'notice-danger' : ''}`}>{children}</div>;
 }
@@ -563,6 +623,16 @@ function groupMatches(matches) {
     groups[groupKey].push(match);
     return groups;
   }, {});
+}
+
+function filterMatchesByPhase(matches, phase) {
+  if (phase === 'all') return matches;
+  return matches.filter((match) => (match.stage ?? 'group') === phase);
+}
+
+function formatMatchNumber(match) {
+  if (!match.match_number) return 'M--';
+  return `M${String(match.match_number).padStart(3, '0')}`;
 }
 
 function getMatchLabel(match) {

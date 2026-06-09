@@ -38,8 +38,8 @@ begin
     base_date := date '2026-06-11' + ((group_index - 1) / 2);
 
     foreach pairing slice 1 in array pairings loop
-      p1 := group_code || pairing[1]::text;
-      p2 := group_code || pairing[2]::text;
+      p1 := 'Grupo ' || group_code || ' - Equipo ' || pairing[1]::text;
+      p2 := 'Grupo ' || group_code || ' - Equipo ' || pairing[2]::text;
 
       insert into public.matches (
         match_number,
@@ -73,35 +73,35 @@ begin
 end $$;
 
 insert into public.matches (match_number, group_name, home_team, away_team, match_date, stage, round_label, display_order) values
-(73, 'R32', '1A', '3C/D/E/F/H', '2026-06-28 18:00:00+00', 'knockout', 'Ronda de 32', 73),
-(74, 'R32', '1E', '3A/B/C/D/F', '2026-06-28 21:00:00+00', 'knockout', 'Ronda de 32', 74),
-(75, 'R32', '1F', '2C', '2026-06-29 18:00:00+00', 'knockout', 'Ronda de 32', 75),
-(76, 'R32', '1C', '3D/E/F/I/J', '2026-06-29 21:00:00+00', 'knockout', 'Ronda de 32', 76),
-(77, 'R32', '1I', '3C/D/F/G/H', '2026-06-30 18:00:00+00', 'knockout', 'Ronda de 32', 77),
-(78, 'R32', '2E', '2I', '2026-06-30 21:00:00+00', 'knockout', 'Ronda de 32', 78),
-(79, 'R32', '1A', '3C/E/F/H/I', '2026-07-01 18:00:00+00', 'knockout', 'Ronda de 32', 79),
-(80, 'R32', '1L', '3E/H/I/J/K', '2026-07-01 21:00:00+00', 'knockout', 'Ronda de 32', 80),
-(81, 'R32', '1D', '3E/F/I/J/K', '2026-07-02 18:00:00+00', 'knockout', 'Ronda de 32', 81),
-(82, 'R32', '1G', '3A/E/H/I/J', '2026-07-02 21:00:00+00', 'knockout', 'Ronda de 32', 82),
-(83, 'R32', '2K', '2L', '2026-07-03 18:00:00+00', 'knockout', 'Ronda de 32', 83),
-(84, 'R32', '1H', '2J', '2026-07-03 21:00:00+00', 'knockout', 'Ronda de 32', 84),
-(85, 'R32', '1B', '3E/F/G/J/K', '2026-07-03 23:00:00+00', 'knockout', 'Ronda de 32', 85),
-(86, 'R32', '1J', '2H', '2026-07-02 23:00:00+00', 'knockout', 'Ronda de 32', 86),
-(87, 'R32', '1K', '3D/E/J/K/L', '2026-07-01 23:00:00+00', 'knockout', 'Ronda de 32', 87),
-(88, 'R32', '2D', '2G', '2026-06-30 23:00:00+00', 'knockout', 'Ronda de 32', 88),
-(89, 'R16', 'W74', 'W77', '2026-07-04 18:00:00+00', 'knockout', 'Octavos de final', 89),
-(90, 'R16', 'W73', 'W75', '2026-07-04 21:00:00+00', 'knockout', 'Octavos de final', 90),
-(91, 'R16', 'W76', 'W78', '2026-07-05 18:00:00+00', 'knockout', 'Octavos de final', 91),
-(92, 'R16', 'W79', 'W80', '2026-07-05 21:00:00+00', 'knockout', 'Octavos de final', 92),
-(93, 'R16', 'W83', 'W84', '2026-07-06 18:00:00+00', 'knockout', 'Octavos de final', 93),
-(94, 'R16', 'W81', 'W82', '2026-07-06 21:00:00+00', 'knockout', 'Octavos de final', 94),
-(95, 'R16', 'W86', 'W88', '2026-07-07 18:00:00+00', 'knockout', 'Octavos de final', 95),
-(96, 'R16', 'W85', 'W87', '2026-07-07 21:00:00+00', 'knockout', 'Octavos de final', 96),
-(97, 'QF', 'W89', 'W90', '2026-07-09 20:00:00+00', 'knockout', 'Cuartos de final', 97),
-(98, 'QF', 'W93', 'W94', '2026-07-10 20:00:00+00', 'knockout', 'Cuartos de final', 98),
-(99, 'QF', 'W91', 'W92', '2026-07-11 18:00:00+00', 'knockout', 'Cuartos de final', 99),
-(100, 'QF', 'W95', 'W96', '2026-07-11 21:00:00+00', 'knockout', 'Cuartos de final', 100),
-(101, 'SF', 'W97', 'W98', '2026-07-14 20:00:00+00', 'knockout', 'Semifinal', 101),
-(102, 'SF', 'W99', 'W100', '2026-07-15 20:00:00+00', 'knockout', 'Semifinal', 102),
-(103, '3P', 'L101', 'L102', '2026-07-18 20:00:00+00', 'knockout', 'Tercer lugar', 103),
-(104, 'F', 'W101', 'W102', '2026-07-19 20:00:00+00', 'knockout', 'Final', 104);
+(73, 'R32', '2do lugar Grupo A', '2do lugar Grupo B', '2026-06-28 18:00:00+00', 'knockout', 'Ronda de 32', 73),
+(74, 'R32', '1er lugar Grupo E', 'Mejor 3er lugar A/B/C/D/F', '2026-06-28 21:00:00+00', 'knockout', 'Ronda de 32', 74),
+(75, 'R32', '1er lugar Grupo F', '2do lugar Grupo C', '2026-06-29 18:00:00+00', 'knockout', 'Ronda de 32', 75),
+(76, 'R32', '1er lugar Grupo C', 'Mejor 3er lugar D/E/F/I/J', '2026-06-29 21:00:00+00', 'knockout', 'Ronda de 32', 76),
+(77, 'R32', '1er lugar Grupo I', 'Mejor 3er lugar C/D/F/G/H', '2026-06-30 18:00:00+00', 'knockout', 'Ronda de 32', 77),
+(78, 'R32', '2do lugar Grupo E', '2do lugar Grupo I', '2026-06-30 21:00:00+00', 'knockout', 'Ronda de 32', 78),
+(79, 'R32', '1er lugar Grupo A', 'Mejor 3er lugar C/E/F/H/I', '2026-07-01 18:00:00+00', 'knockout', 'Ronda de 32', 79),
+(80, 'R32', '1er lugar Grupo L', 'Mejor 3er lugar E/H/I/J/K', '2026-07-01 21:00:00+00', 'knockout', 'Ronda de 32', 80),
+(81, 'R32', '1er lugar Grupo D', 'Mejor 3er lugar E/F/I/J/K', '2026-07-02 18:00:00+00', 'knockout', 'Ronda de 32', 81),
+(82, 'R32', '1er lugar Grupo G', 'Mejor 3er lugar A/E/H/I/J', '2026-07-02 21:00:00+00', 'knockout', 'Ronda de 32', 82),
+(83, 'R32', '2do lugar Grupo K', '2do lugar Grupo L', '2026-07-03 18:00:00+00', 'knockout', 'Ronda de 32', 83),
+(84, 'R32', '1er lugar Grupo H', '2do lugar Grupo J', '2026-07-03 21:00:00+00', 'knockout', 'Ronda de 32', 84),
+(85, 'R32', '1er lugar Grupo B', 'Mejor 3er lugar E/F/G/J/K', '2026-07-03 23:00:00+00', 'knockout', 'Ronda de 32', 85),
+(86, 'R32', '1er lugar Grupo J', '2do lugar Grupo H', '2026-07-02 23:00:00+00', 'knockout', 'Ronda de 32', 86),
+(87, 'R32', '1er lugar Grupo K', 'Mejor 3er lugar D/E/J/K/L', '2026-07-01 23:00:00+00', 'knockout', 'Ronda de 32', 87),
+(88, 'R32', '2do lugar Grupo D', '2do lugar Grupo G', '2026-06-30 23:00:00+00', 'knockout', 'Ronda de 32', 88),
+(89, 'R16', 'Ganador M074', 'Ganador M077', '2026-07-04 18:00:00+00', 'knockout', 'Octavos de final', 89),
+(90, 'R16', 'Ganador M073', 'Ganador M075', '2026-07-04 21:00:00+00', 'knockout', 'Octavos de final', 90),
+(91, 'R16', 'Ganador M076', 'Ganador M078', '2026-07-05 18:00:00+00', 'knockout', 'Octavos de final', 91),
+(92, 'R16', 'Ganador M079', 'Ganador M080', '2026-07-05 21:00:00+00', 'knockout', 'Octavos de final', 92),
+(93, 'R16', 'Ganador M083', 'Ganador M084', '2026-07-06 18:00:00+00', 'knockout', 'Octavos de final', 93),
+(94, 'R16', 'Ganador M081', 'Ganador M082', '2026-07-06 21:00:00+00', 'knockout', 'Octavos de final', 94),
+(95, 'R16', 'Ganador M086', 'Ganador M088', '2026-07-07 18:00:00+00', 'knockout', 'Octavos de final', 95),
+(96, 'R16', 'Ganador M085', 'Ganador M087', '2026-07-07 21:00:00+00', 'knockout', 'Octavos de final', 96),
+(97, 'QF', 'Ganador M089', 'Ganador M090', '2026-07-09 20:00:00+00', 'knockout', 'Cuartos de final', 97),
+(98, 'QF', 'Ganador M093', 'Ganador M094', '2026-07-10 20:00:00+00', 'knockout', 'Cuartos de final', 98),
+(99, 'QF', 'Ganador M091', 'Ganador M092', '2026-07-11 18:00:00+00', 'knockout', 'Cuartos de final', 99),
+(100, 'QF', 'Ganador M095', 'Ganador M096', '2026-07-11 21:00:00+00', 'knockout', 'Cuartos de final', 100),
+(101, 'SF', 'Ganador M097', 'Ganador M098', '2026-07-14 20:00:00+00', 'knockout', 'Semifinal', 101),
+(102, 'SF', 'Ganador M099', 'Ganador M100', '2026-07-15 20:00:00+00', 'knockout', 'Semifinal', 102),
+(103, '3P', 'Perdedor M101', 'Perdedor M102', '2026-07-18 20:00:00+00', 'knockout', 'Tercer lugar', 103),
+(104, 'F', 'Ganador M101', 'Ganador M102', '2026-07-19 20:00:00+00', 'knockout', 'Final', 104);
