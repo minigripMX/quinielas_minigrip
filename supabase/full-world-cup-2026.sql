@@ -17,6 +17,20 @@ delete from public.matches;
 do $$
 declare
   groups text[] := array['A','B','C','D','E','F','G','H','I','J','K','L'];
+  group_teams jsonb := '{
+    "A": ["Mexico", "South Africa", "South Korea", "Czechia"],
+    "B": ["Canada", "Bosnia and Herzegovina", "Qatar", "Switzerland"],
+    "C": ["Brazil", "Morocco", "Haiti", "Scotland"],
+    "D": ["United States", "Paraguay", "Australia", "Turkey"],
+    "E": ["Germany", "Curacao", "Ivory Coast", "Ecuador"],
+    "F": ["Netherlands", "Japan", "Sweden", "Tunisia"],
+    "G": ["Belgium", "Egypt", "Iran", "New Zealand"],
+    "H": ["Spain", "Cape Verde", "Saudi Arabia", "Uruguay"],
+    "I": ["France", "Senegal", "Iraq", "Norway"],
+    "J": ["Argentina", "Algeria", "Austria", "Jordan"],
+    "K": ["Portugal", "DR Congo", "Uzbekistan", "Colombia"],
+    "L": ["England", "Croatia", "Ghana", "Panama"]
+  }'::jsonb;
   group_code text;
   group_index int;
   match_no int := 1;
@@ -38,8 +52,8 @@ begin
     base_date := date '2026-06-11' + ((group_index - 1) / 2);
 
     foreach pairing slice 1 in array pairings loop
-      p1 := 'Grupo ' || group_code || ' - Equipo ' || pairing[1]::text;
-      p2 := 'Grupo ' || group_code || ' - Equipo ' || pairing[2]::text;
+      p1 := group_teams -> group_code ->> (pairing[1] - 1);
+      p2 := group_teams -> group_code ->> (pairing[2] - 1);
 
       insert into public.matches (
         match_number,

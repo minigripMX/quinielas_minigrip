@@ -93,6 +93,22 @@ body {
     @apply border-accent bg-accent text-pitch hover:text-pitch;
   }
 
+  .guide-grid {
+    @apply grid gap-3 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .guide-item {
+    @apply rounded-md border border-line bg-panelSoft p-4;
+  }
+
+  .guide-item h3 {
+    @apply mb-2 text-base font-black text-gold;
+  }
+
+  .guide-item p {
+    @apply text-sm leading-6 text-slate-300;
+  }
+
   .locked {
     @apply inline-flex items-center gap-1 text-gold;
   }

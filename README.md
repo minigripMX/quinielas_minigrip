@@ -120,4 +120,4 @@ Este comando ejecuta `npm run build` y publica `dist` con `gh-pages`. El archivo
 supabase/full-world-cup-2026.sql
 ```
 
-Ese script reemplaza los partidos actuales por 104 slots: 72 de fase de grupos, 16 de ronda de 32, 8 de octavos, 4 de cuartos, 2 semifinales, tercer lugar y final. Conserva usuarios/perfiles, pero borra picks/results existentes porque dependen de los partidos anteriores.
+Ese script reemplaza los partidos actuales por 104 partidos: 72 de fase de grupos con nombres de selecciones, 16 de ronda de 32, 8 de octavos, 4 de cuartos, 2 semifinales, tercer lugar y final. Conserva usuarios/perfiles, pero borra picks/results existentes porque dependen de los partidos anteriores.

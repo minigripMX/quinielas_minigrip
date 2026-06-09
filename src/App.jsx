@@ -3,6 +3,7 @@ import {
   CalendarDays,
   Check,
   GitFork,
+  HelpCircle,
   Lock,
   LogOut,
   Medal,
@@ -18,6 +19,7 @@ import { useAuth } from './hooks/useAuth';
 import { useQuinielaData } from './hooks/useQuinielaData';
 
 const tabs = [
+  { id: 'guia', label: 'Guia', icon: HelpCircle },
   { id: 'ranking', label: 'Tabla', icon: Trophy },
   { id: 'quiniela', label: 'Mi quiniela', icon: Check },
   { id: 'partidos', label: 'Partidos', icon: CalendarDays },
@@ -96,6 +98,7 @@ function Dashboard({ profile }) {
 
         {data.loading ? <ShellMessage text="Cargando quiniela..." compact /> : null}
         {data.error ? <Notice tone="danger">{data.error}</Notice> : null}
+        {!data.loading && active === 'guia' ? <Guide /> : null}
         {!data.loading && active === 'ranking' ? <Ranking stats={data.stats} /> : null}
         {!data.loading && active === 'quiniela' ? <MyPicks profile={profile} data={data} /> : null}
         {!data.loading && active === 'partidos' ? <Matches data={data} /> : null}
@@ -104,6 +107,40 @@ function Dashboard({ profile }) {
         {!data.loading && active === 'usuarios' ? <UsersAdmin data={data} /> : null}
       </main>
     </div>
+  );
+}
+
+function Guide() {
+  return (
+    <section className="section">
+      <SectionTitle icon={HelpCircle} title="Guia de uso" />
+      <div className="guide-grid">
+        <article className="guide-item">
+          <h3>1. Mi quiniela</h3>
+          <p>Entra a Mi quiniela y elige un pronostico por partido: 1 si gana el local, X si empatan, 2 si gana el visitante.</p>
+        </article>
+        <article className="guide-item">
+          <h3>2. Bloqueo de votos</h3>
+          <p>Puedes cambiar tu voto mientras el partido no tenga resultado. Cuando el admin captura marcador, ese partido queda cerrado.</p>
+        </article>
+        <article className="guide-item">
+          <h3>3. Puntos y tabla</h3>
+          <p>Cada acierto suma en la Tabla. La precision se calcula con tus pronosticos de partidos que ya tienen resultado.</p>
+        </article>
+        <article className="guide-item">
+          <h3>4. Fases</h3>
+          <p>Usa los filtros para ver Fase de grupos o Eliminatorias. Los partidos muestran numero M001, M073, etc. para ubicarlos facil.</p>
+        </article>
+        <article className="guide-item">
+          <h3>5. Partidos</h3>
+          <p>La vista Partidos muestra calendario, marcador final si ya existe, o conteo de votos 1/X/2 si sigue abierto.</p>
+        </article>
+        <article className="guide-item">
+          <h3>6. Llaves</h3>
+          <p>La pestaña Llaves muestra el camino de eliminatorias. Los nombres como Ganador M097 se resuelven segun avanza el torneo.</p>
+        </article>
+      </div>
+    </section>
   );
 }
 
