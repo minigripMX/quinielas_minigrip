@@ -222,6 +222,7 @@ function MyPicks({ profile, data }) {
   );
   const visibleMatches = filterMatchesByPhase(data.matches, phase);
   const groups = groupMatches(visibleMatches);
+  const teamResolver = buildTournamentResolver(data.matches, data.results);
 
   async function savePick(matchId, pick) {
     if (data.resultByMatch.has(matchId)) return;
@@ -256,9 +257,9 @@ function MyPicks({ profile, data }) {
                 <article className="match-card" key={match.id}>
                   <MatchMeta match={match} right={resolved ? <span className="locked"><Lock size={13} /> Cerrado</span> : <span>Abierto</span>} />
                   <div className="teams">
-                    <strong>{match.home_team}</strong>
+                    <TeamName value={match.home_team} resolver={teamResolver} />
                     <span>vs</span>
-                    <strong>{match.away_team}</strong>
+                    <TeamName value={match.away_team} resolver={teamResolver} />
                   </div>
                   <div className="pick-row">
                     {['1', 'x', '2'].map((pick) => (
@@ -292,6 +293,7 @@ function Matches({ data }) {
   const [phase, setPhase] = useState('group');
   const visibleMatches = filterMatchesByPhase(data.matches, phase);
   const groups = groupMatches(visibleMatches);
+  const teamResolver = buildTournamentResolver(data.matches, data.results);
 
   return (
     <section className="space-y-5">
@@ -310,9 +312,9 @@ function Matches({ data }) {
                 <article className="match-card" key={match.id}>
                   <MatchMeta match={match} right={<span>{result ? 'Final' : 'Votos'}</span>} />
                   <div className="teams">
-                    <strong>{match.home_team}</strong>
+                    <TeamName value={match.home_team} resolver={teamResolver} />
                     <span>{result ? `${result.score_home}-${result.score_away}` : 'vs'}</span>
-                    <strong>{match.away_team}</strong>
+                    <TeamName value={match.away_team} resolver={teamResolver} />
                   </div>
                   {!result ? (
                     <div className="vote-counts">
@@ -441,6 +443,7 @@ function ResultsAdmin({ data }) {
   const [phase, setPhase] = useState('group');
   const visibleMatches = filterMatchesByPhase(data.matches, phase);
   const groups = groupMatches(visibleMatches);
+  const teamResolver = buildTournamentResolver(data.matches, data.results);
 
   return (
     <section className="space-y-5">
@@ -454,7 +457,7 @@ function ResultsAdmin({ data }) {
           <h3 className="mb-4 text-lg font-black text-gold">{group}</h3>
           <div className="space-y-3">
             {matches.map((match) => (
-              <ResultForm data={data} key={match.id} match={match} result={data.resultByMatch.get(match.id)} />
+              <ResultForm data={data} key={match.id} match={match} result={data.resultByMatch.get(match.id)} teamResolver={teamResolver} />
             ))}
           </div>
         </div>
@@ -463,7 +466,7 @@ function ResultsAdmin({ data }) {
   );
 }
 
-function ResultForm({ data, match, result }) {
+function ResultForm({ data, match, result, teamResolver }) {
   const [home, setHome] = useState(result?.score_home ?? '');
   const [away, setAway] = useState(result?.score_away ?? '');
 
@@ -487,7 +490,10 @@ function ResultForm({ data, match, result }) {
   return (
     <form className="admin-row" onSubmit={saveResult}>
       <div>
-        <p className="font-semibold"><span className="match-number-inline">{formatMatchNumber(match)}</span> {match.home_team} vs {match.away_team}</p>
+        <p className="font-semibold">
+          <span className="match-number-inline">{formatMatchNumber(match)}</span>
+          <TeamName value={match.home_team} resolver={teamResolver} inline /> vs <TeamName value={match.away_team} resolver={teamResolver} inline />
+        </p>
         <p className="text-xs text-slate-400">{getMatchLabel(match)}</p>
       </div>
       <div className="score-inputs">
@@ -637,6 +643,22 @@ function MatchMeta({ match, right }) {
   );
 }
 
+function TeamName({ value, resolver, inline = false }) {
+  const expanded = resolver(value);
+  const content = (
+    <>
+      <strong>{expanded.label}</strong>
+      {expanded.context ? <small>{expanded.context}</small> : null}
+    </>
+  );
+
+  if (inline) {
+    return <span className="team-inline">{expanded.label}</span>;
+  }
+
+  return <span className="team-name">{content}</span>;
+}
+
 function Notice({ children, tone = 'info' }) {
   return <div className={`notice ${tone === 'danger' ? 'notice-danger' : ''}`}>{children}</div>;
 }
@@ -670,6 +692,171 @@ function filterMatchesByPhase(matches, phase) {
 function formatMatchNumber(match) {
   if (!match.match_number) return 'M--';
   return `M${String(match.match_number).padStart(3, '0')}`;
+}
+
+function buildTournamentResolver(matches, results) {
+  const matchByNumber = new Map(matches.map((match) => [formatMatchNumber(match), match]));
+  const resultByMatch = new Map(results.map((result) => [result.match_id, result]));
+  const groupTables = buildGroupTables(matches, resultByMatch);
+  const thirdPlaces = [...groupTables.values()]
+    .map((table) => table[2])
+    .filter(Boolean)
+    .sort(compareStandingRows);
+
+  function resolve(value, seen = new Set()) {
+    const text = String(value ?? '');
+    const groupPlace = text.match(/^(\d)(?:er|do) lugar Grupo ([A-L])$/);
+    const bestThird = text.match(/^Mejor 3er lugar ([A-L/]+)$/);
+    const matchReference = text.match(/^(Ganador|Perdedor) M(\d{3})$/);
+
+    if (groupPlace) {
+      const position = Number(groupPlace[1]) - 1;
+      const group = groupPlace[2];
+      const table = groupTables.get(group);
+      const complete = isGroupComplete(matches, resultByMatch, group);
+      const row = complete ? table?.[position] : null;
+
+      return {
+        label: row?.team ?? 'Por definir',
+        context: row ? text : `${text} se define al cerrar el Grupo ${group}`,
+      };
+    }
+
+    if (bestThird) {
+      const candidates = bestThird[1].split('/');
+      const complete = candidates.every((group) => isGroupComplete(matches, resultByMatch, group));
+      const row = complete
+        ? thirdPlaces.find((third) => candidates.includes(third.group))
+        : null;
+
+      return {
+        label: row?.team ?? 'Por definir',
+        context: row ? text : `${text} se define con mejores terceros`,
+      };
+    }
+
+    if (matchReference) {
+      const kind = matchReference[1];
+      const matchNumber = `M${matchReference[2]}`;
+      const sourceMatch = matchByNumber.get(matchNumber);
+
+      if (!sourceMatch) {
+        return { label: text };
+      }
+
+      if (seen.has(matchNumber)) {
+        return { label: text, context: 'Referencia circular' };
+      }
+
+      const nextSeen = new Set(seen);
+      nextSeen.add(matchNumber);
+
+      const home = resolve(sourceMatch.home_team, nextSeen);
+      const away = resolve(sourceMatch.away_team, nextSeen);
+      const result = resultByMatch.get(sourceMatch.id);
+      const unresolvedContext = `${matchNumber}: ${home.label} vs ${away.label}`;
+
+      if (!result) {
+        return {
+          label: 'Por definir',
+          context: `${kind} de ${unresolvedContext}`,
+        };
+      }
+
+      if (result.outcome === 'x') {
+        return {
+          label: 'Por definir',
+          context: `${matchNumber} requiere desempate`,
+        };
+      }
+
+      const homeWins = result.outcome === '1';
+      const winner = homeWins ? home : away;
+      const loser = homeWins ? away : home;
+      const selected = kind === 'Ganador' ? winner : loser;
+
+      return {
+        label: selected.label,
+        context: `${kind} de ${matchNumber}`,
+      };
+    }
+
+    return { label: text };
+  }
+
+  return resolve;
+}
+
+function buildGroupTables(matches, resultByMatch) {
+  const tables = new Map();
+  const groupMatches = matches.filter((match) => (match.stage ?? 'group') === 'group');
+
+  groupMatches.forEach((match) => {
+    if (!tables.has(match.group_name)) {
+      tables.set(match.group_name, new Map());
+    }
+
+    const table = tables.get(match.group_name);
+    ensureStandingRow(table, match.home_team, match.group_name);
+    ensureStandingRow(table, match.away_team, match.group_name);
+
+    const result = resultByMatch.get(match.id);
+    if (!result) return;
+
+    const home = table.get(match.home_team);
+    const away = table.get(match.away_team);
+    home.played += 1;
+    away.played += 1;
+    home.goalsFor += result.score_home;
+    home.goalsAgainst += result.score_away;
+    away.goalsFor += result.score_away;
+    away.goalsAgainst += result.score_home;
+
+    if (result.score_home > result.score_away) {
+      home.points += 3;
+    } else if (result.score_home < result.score_away) {
+      away.points += 3;
+    } else {
+      home.points += 1;
+      away.points += 1;
+    }
+  });
+
+  return new Map(
+    [...tables.entries()].map(([group, table]) => [
+      group,
+      [...table.values()].sort(compareStandingRows),
+    ]),
+  );
+}
+
+function ensureStandingRow(table, team, group) {
+  if (!table.has(team)) {
+    table.set(team, {
+      team,
+      group,
+      played: 0,
+      points: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+    });
+  }
+}
+
+function compareStandingRows(a, b) {
+  const goalDiffA = a.goalsFor - a.goalsAgainst;
+  const goalDiffB = b.goalsFor - b.goalsAgainst;
+  return (
+    b.points - a.points ||
+    goalDiffB - goalDiffA ||
+    b.goalsFor - a.goalsFor ||
+    a.team.localeCompare(b.team)
+  );
+}
+
+function isGroupComplete(matches, resultByMatch, group) {
+  const groupMatches = matches.filter((match) => (match.stage ?? 'group') === 'group' && match.group_name === group);
+  return groupMatches.length === 6 && groupMatches.every((match) => resultByMatch.has(match.id));
 }
 
 function getMatchLabel(match) {

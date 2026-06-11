@@ -121,6 +121,22 @@ body {
     @apply rounded bg-pitch px-2 py-1 text-xs font-black text-gold;
   }
 
+  .teams .team-name {
+    @apply flex min-h-[46px] flex-col items-center justify-center rounded bg-transparent px-0 py-0 text-slate-100;
+  }
+
+  .team-name strong {
+    @apply text-sm font-black text-white;
+  }
+
+  .team-name small {
+    @apply mt-1 text-[10px] font-bold leading-tight text-slate-400;
+  }
+
+  .team-inline {
+    @apply font-semibold text-slate-100;
+  }
+
   .pick-row {
     @apply mt-4 grid grid-cols-3 gap-2;
   }
