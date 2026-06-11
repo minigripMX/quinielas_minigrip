@@ -180,7 +180,7 @@ function WorldImages() {
 function WorldCupOverview({ data }) {
   const resolved = data.results.length;
   const progress = data.matches.length ? Math.round((resolved / data.matches.length) * 100) : 0;
-  const participants = data.profiles.filter((profile) => profile.role !== 'admin').length;
+  const participants = data.activeMembers.filter((profile) => profile.role !== 'admin').length;
 
   return (
     <section className="world-hero">
@@ -343,6 +343,7 @@ function Ranking({ stats }) {
 
 function MyPicks({ profile, data }) {
   const [phase, setPhase] = useState('group');
+  const isPoolMember = data.poolMembers.some((member) => member.user_id === profile.id);
   const myPicks = useMemo(
     () => new Map(data.picks.filter((pick) => pick.user_id === profile.id).map((pick) => [pick.match_id, pick])),
     [data.picks, profile.id],
@@ -352,6 +353,7 @@ function MyPicks({ profile, data }) {
   const teamResolver = buildTournamentResolver(data.matches, data.results);
 
   async function savePick(matchId, pick) {
+    if (!isPoolMember) return;
     const match = data.matches.find((item) => item.id === matchId);
     if (!canEditPick(match, data.resultByMatch)) return;
 
@@ -370,6 +372,7 @@ function MyPicks({ profile, data }) {
       <SectionTitle icon={Check} title="Mi quiniela" />
         <PhaseFilter value={phase} onChange={setPhase} />
       </div>
+      {!isPoolMember ? <Notice tone="danger">No estas inscrito en esta quiniela. Pide al admin que te agregue para poder votar.</Notice> : null}
 
       {Object.entries(groups).map(([group, matches]) => (
         <div className="section" key={group}>
@@ -394,7 +397,7 @@ function MyPicks({ profile, data }) {
                     {['1', 'x', '2'].map((pick) => (
                       <button
                         className={`pick-button ${selected === pick ? 'pick-selected' : ''}`}
-                        disabled={locked}
+                        disabled={locked || !isPoolMember}
                         key={pick}
                         onClick={() => savePick(match.id, pick)}
                       >
@@ -621,6 +624,14 @@ function PoolsAdmin({ data }) {
       }
     }
 
+    const currentMemberIds = data.poolMembers.map((member) => ({
+      pool_id: pool.id,
+      user_id: member.user_id,
+    }));
+    if (currentMemberIds.length) {
+      await supabase.from('pool_members').insert(currentMemberIds);
+    }
+
     setMessage('Quiniela creada.');
     setForm({ name: '', description: '', cloneCurrent: true, makeActive: false });
     data.setSelectedPoolId(pool.id);
@@ -631,6 +642,39 @@ function PoolsAdmin({ data }) {
     await supabase.from('pools').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('pools').update({ is_active: true }).eq('id', poolId);
     data.setSelectedPoolId(poolId);
+    data.refresh();
+  }
+
+  async function addMember(userId) {
+    const { error } = await supabase.from('pool_members').insert({
+      pool_id: data.activePool.id,
+      user_id: userId,
+    });
+    setMessage(error ? error.message : 'Usuario agregado a la quiniela.');
+    data.refresh();
+  }
+
+  async function removeMember(userId) {
+    const { error } = await supabase
+      .from('pool_members')
+      .delete()
+      .eq('pool_id', data.activePool.id)
+      .eq('user_id', userId);
+    setMessage(error ? error.message : 'Usuario removido de la quiniela.');
+    data.refresh();
+  }
+
+  async function deletePool(poolId) {
+    const confirmed = window.confirm('Esta accion elimina la quiniela con partidos, votos y resultados. No elimina usuarios. Continuar?');
+    if (!confirmed) return;
+
+    const { error } = await supabase.from('pools').delete().eq('id', poolId);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    data.setSelectedPoolId('');
     data.refresh();
   }
 
@@ -681,9 +725,42 @@ function PoolsAdmin({ data }) {
               <div className="pool-actions">
                 {pool.is_active ? <span className="pool-badge">Activa</span> : null}
                 <button className="primary-button" onClick={() => setActivePool(pool.id)}>Usar</button>
+                <button className="danger-button" onClick={() => deletePool(pool.id)}>Eliminar</button>
               </div>
             </article>
           ))}
+        </div>
+      </div>
+
+      <div className="section lg:col-span-2">
+        <SectionTitle icon={Users} title="Usuarios de esta quiniela" />
+        <div className="members-grid">
+          <div>
+            <h3 className="members-title">Inscritos</h3>
+            <div className="members-list">
+              {data.activeMembers.map((user) => (
+                <div className="member-row" key={user.id}>
+                  <span>{user.name}</span>
+                  <button className="danger-button" onClick={() => removeMember(user.id)}>Quitar</button>
+                </div>
+              ))}
+              {!data.activeMembers.length ? <p className="empty-text">No hay usuarios inscritos.</p> : null}
+            </div>
+          </div>
+          <div>
+            <h3 className="members-title">Disponibles</h3>
+            <div className="members-list">
+              {data.profiles
+                .filter((user) => user.role !== 'admin')
+                .filter((user) => !data.poolMembers.some((member) => member.user_id === user.id))
+                .map((user) => (
+                  <div className="member-row" key={user.id}>
+                    <span>{user.name}</span>
+                    <button className="primary-button" onClick={() => addMember(user.id)}>Agregar</button>
+                  </div>
+                ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -904,7 +981,7 @@ function UsersAdmin({ data }) {
               </tr>
             </thead>
             <tbody>
-              {data.stats.map((user) => (
+              {data.allStats.map((user) => (
                 <tr key={user.id}>
                   <td>{user.name}</td>
                   <td>{user.username}</td>

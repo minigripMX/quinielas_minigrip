@@ -347,6 +347,26 @@ body {
     @apply rounded bg-gold px-2 py-1 text-xs font-black uppercase text-pitch;
   }
 
+  .members-grid {
+    @apply grid gap-5 md:grid-cols-2;
+  }
+
+  .members-title {
+    @apply mb-3 text-sm font-black uppercase tracking-wide text-gold;
+  }
+
+  .members-list {
+    @apply grid gap-2;
+  }
+
+  .member-row {
+    @apply flex items-center justify-between gap-3 rounded-md border border-line bg-panelSoft p-3 text-sm font-bold text-slate-200;
+  }
+
+  .empty-text {
+    @apply rounded border border-line bg-pitch p-3 text-sm text-slate-400;
+  }
+
   .check-row {
     @apply flex items-center gap-2 text-sm font-bold text-slate-300;
   }

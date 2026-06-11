@@ -5,6 +5,8 @@ import { buildStats } from '../lib/scoring';
 const initialState = {
   pools: [],
   activePool: null,
+  poolMembers: [],
+  activeMembers: [],
   matches: [],
   picks: [],
   results: [],
@@ -52,6 +54,8 @@ export function useQuinielaData() {
       setState({
         pools,
         activePool: null,
+        poolMembers: [],
+        activeMembers: [],
         matches: [],
         picks: [],
         results: [],
@@ -61,19 +65,24 @@ export function useQuinielaData() {
       return;
     }
 
-    const [matchesRes, picksRes, resultsRes] = await Promise.all([
+    const [matchesRes, picksRes, resultsRes, membersRes] = await Promise.all([
       supabase.from('matches').select('*').eq('pool_id', activePool.id).order('match_date').order('group_name'),
       supabase.from('picks').select('*, matches!inner(pool_id)').eq('matches.pool_id', activePool.id),
       supabase.from('results').select('*, matches!inner(pool_id)').eq('matches.pool_id', activePool.id),
+      supabase.from('pool_members').select('*').eq('pool_id', activePool.id),
     ]);
 
-    const firstError = [matchesRes, picksRes, resultsRes].find((response) => response.error)?.error;
+    const firstError = [matchesRes, picksRes, resultsRes, membersRes].find((response) => response.error)?.error;
     if (firstError) {
       setError(firstError.message);
     } else {
       setState({
         pools,
         activePool,
+        poolMembers: membersRes.data ?? [],
+        activeMembers: (profilesRes.data ?? []).filter((profile) =>
+          (membersRes.data ?? []).some((member) => member.user_id === profile.id),
+        ),
         matches: matchesRes.data ?? [],
         picks: stripJoinedMatches(picksRes.data ?? []),
         results: stripJoinedMatches(resultsRes.data ?? []),
@@ -93,6 +102,7 @@ export function useQuinielaData() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'results' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pools' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pool_members' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, refresh)
       .subscribe();
 
@@ -116,6 +126,10 @@ export function useQuinielaData() {
     return grouped;
   }, [state.picks]);
   const stats = useMemo(
+    () => buildStats(state.activeMembers, state.picks, state.results),
+    [state.activeMembers, state.picks, state.results],
+  );
+  const allStats = useMemo(
     () => buildStats(state.profiles, state.picks, state.results),
     [state.profiles, state.picks, state.results],
   );
@@ -125,6 +139,7 @@ export function useQuinielaData() {
     resultByMatch,
     picksByMatch,
     stats,
+    allStats,
     loading,
     error,
     refresh,

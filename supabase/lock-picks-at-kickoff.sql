@@ -20,6 +20,10 @@ begin
     raise exception 'This match has already started';
   end if;
 
+  if not public.is_pool_member_for_match(new.match_id, new.user_id) then
+    raise exception 'User is not a member of this pool';
+  end if;
+
   if exists (select 1 from public.results where match_id = new.match_id) then
     raise exception 'This match already has a result';
   end if;
