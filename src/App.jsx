@@ -4,6 +4,7 @@ import {
   Check,
   GitFork,
   HelpCircle,
+  Layers,
   Lock,
   LogOut,
   Medal,
@@ -24,6 +25,7 @@ const tabs = [
   { id: 'quiniela', label: 'Mi quiniela', icon: Check },
   { id: 'partidos', label: 'Partidos', icon: CalendarDays },
   { id: 'llaves', label: 'Llaves', icon: GitFork },
+  { id: 'quinielas-admin', label: 'Quinielas', icon: Layers, admin: true },
   { id: 'resultados', label: 'Resultados', icon: Shield, admin: true },
   { id: 'usuarios', label: 'Usuarios', icon: Users, admin: true },
 ];
@@ -98,15 +100,78 @@ function Dashboard({ profile }) {
 
         {data.loading ? <ShellMessage text="Cargando quiniela..." compact /> : null}
         {data.error ? <Notice tone="danger">{data.error}</Notice> : null}
+        {!data.loading ? <WorldCupOverview data={data} /> : null}
+        {!data.loading ? <PoolSelector data={data} /> : null}
         {!data.loading && active === 'guia' ? <Guide /> : null}
         {!data.loading && active === 'ranking' ? <Ranking stats={data.stats.filter((user) => user.role !== 'admin')} /> : null}
         {!data.loading && active === 'quiniela' ? <MyPicks profile={profile} data={data} /> : null}
         {!data.loading && active === 'partidos' ? <Matches data={data} /> : null}
         {!data.loading && active === 'llaves' ? <KnockoutBoard /> : null}
+        {!data.loading && active === 'quinielas-admin' ? <PoolsAdmin data={data} /> : null}
         {!data.loading && active === 'resultados' ? <ResultsAdmin data={data} /> : null}
         {!data.loading && active === 'usuarios' ? <UsersAdmin data={data} /> : null}
       </main>
     </div>
+  );
+}
+
+function WorldCupOverview({ data }) {
+  const resolved = data.results.length;
+  const progress = data.matches.length ? Math.round((resolved / data.matches.length) * 100) : 0;
+  const participants = data.profiles.filter((profile) => profile.role !== 'admin').length;
+
+  return (
+    <section className="world-hero">
+      <div>
+        <p className="world-kicker">Mundial 2026</p>
+        <h2>{data.activePool?.name ?? 'Sin quiniela activa'}</h2>
+        <p className="world-copy">Administra varias quinielas, cambia de torneo y sigue el avance de cada marcador en tiempo real.</p>
+      </div>
+      <div className="world-visual" aria-hidden="true">
+        <div className="world-ball" />
+        <div className="world-ring world-ring-one" />
+        <div className="world-ring world-ring-two" />
+      </div>
+      <div className="world-stats">
+        <StatTile label="Quinielas" value={data.pools.length} />
+        <StatTile label="Partidos" value={data.matches.length} />
+        <StatTile label="Jugadores" value={participants} />
+        <StatTile label="Avance" value={`${progress}%`} />
+      </div>
+    </section>
+  );
+}
+
+function StatTile({ label, value }) {
+  return (
+    <div className="stat-tile">
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function PoolSelector({ data }) {
+  if (!data.pools.length) {
+    return <Notice tone="danger">No hay quinielas creadas. Ejecuta la migracion multi-pools o crea una desde Supabase.</Notice>;
+  }
+
+  return (
+    <section className="pool-bar">
+      <label className="field-label">
+        Quiniela activa
+        <select className="field-input" value={data.activePool?.id ?? ''} onChange={(event) => data.setSelectedPoolId(event.target.value)}>
+          {data.pools.map((pool) => (
+            <option key={pool.id} value={pool.id}>
+              {pool.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="pool-summary">
+        <span>{data.activePool?.description || 'Sin descripcion'}</span>
+      </div>
+    </section>
   );
 }
 
@@ -436,6 +501,128 @@ function MatchPill({ match }) {
       <strong>{match.id}</strong>
       <span>{match.detail}</span>
     </div>
+  );
+}
+
+function PoolsAdmin({ data }) {
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    cloneCurrent: true,
+    makeActive: false,
+  });
+  const [message, setMessage] = useState('');
+
+  async function createPool(event) {
+    event.preventDefault();
+    setMessage('');
+
+    if (form.makeActive) {
+      await supabase.from('pools').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+    }
+
+    const { data: pool, error } = await supabase
+      .from('pools')
+      .insert({
+        name: form.name.trim(),
+        description: form.description.trim(),
+        is_active: form.makeActive,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    if (form.cloneCurrent && data.matches.length) {
+      const copiedMatches = data.matches.map((match) => ({
+        pool_id: pool.id,
+        match_number: match.match_number,
+        group_name: match.group_name,
+        home_team: match.home_team,
+        away_team: match.away_team,
+        match_date: match.match_date,
+        stage: match.stage ?? 'group',
+        round_label: match.round_label,
+        display_order: match.display_order,
+      }));
+
+      const { error: matchError } = await supabase.from('matches').insert(copiedMatches);
+      if (matchError) {
+        setMessage(`Quiniela creada, pero no se pudieron copiar partidos: ${matchError.message}`);
+        data.refresh();
+        return;
+      }
+    }
+
+    setMessage('Quiniela creada.');
+    setForm({ name: '', description: '', cloneCurrent: true, makeActive: false });
+    data.setSelectedPoolId(pool.id);
+    data.refresh();
+  }
+
+  async function setActivePool(poolId) {
+    await supabase.from('pools').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('pools').update({ is_active: true }).eq('id', poolId);
+    data.setSelectedPoolId(poolId);
+    data.refresh();
+  }
+
+  return (
+    <section className="grid gap-5 lg:grid-cols-[420px_1fr]">
+      <form className="section" onSubmit={createPool}>
+        <SectionTitle icon={Layers} title="Crear quiniela" />
+        <div className="space-y-3">
+          <Field label="Nombre" value={form.name} onChange={(value) => setForm({ ...form, name: value })} />
+          <label className="field-label">
+            Descripcion
+            <textarea
+              className="field-input min-h-24"
+              value={form.description}
+              onChange={(event) => setForm({ ...form, description: event.target.value })}
+            />
+          </label>
+          <label className="check-row">
+            <input
+              checked={form.cloneCurrent}
+              onChange={(event) => setForm({ ...form, cloneCurrent: event.target.checked })}
+              type="checkbox"
+            />
+            Copiar partidos de la quiniela actual
+          </label>
+          <label className="check-row">
+            <input
+              checked={form.makeActive}
+              onChange={(event) => setForm({ ...form, makeActive: event.target.checked })}
+              type="checkbox"
+            />
+            Marcar como quiniela activa
+          </label>
+          <button className="primary-button w-full" disabled={!form.name.trim()}>Crear quiniela</button>
+          {message ? <Notice>{message}</Notice> : null}
+        </div>
+      </form>
+
+      <div className="section">
+        <SectionTitle icon={Layers} title="Quinielas existentes" />
+        <div className="pool-list">
+          {data.pools.map((pool) => (
+            <article className="pool-card" key={pool.id}>
+              <div>
+                <h3>{pool.name}</h3>
+                <p>{pool.description || 'Sin descripcion'}</p>
+              </div>
+              <div className="pool-actions">
+                {pool.is_active ? <span className="pool-badge">Activa</span> : null}
+                <button className="primary-button" onClick={() => setActivePool(pool.id)}>Usar</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

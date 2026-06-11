@@ -185,6 +185,101 @@ body {
     @apply border-red-500/40 bg-red-500/10 text-red-200;
   }
 
+  .world-hero {
+    @apply relative mb-5 grid gap-4 overflow-hidden rounded-md border border-line bg-panel p-5 shadow-glow lg:grid-cols-[1.2fr_220px_1fr] lg:items-center;
+  }
+
+  .world-kicker {
+    @apply text-xs font-black uppercase tracking-[0.24em] text-accent;
+  }
+
+  .world-hero h2 {
+    @apply mt-2 text-2xl font-black text-white;
+  }
+
+  .world-copy {
+    @apply mt-2 max-w-2xl text-sm leading-6 text-slate-300;
+  }
+
+  .world-visual {
+    @apply relative mx-auto hidden h-40 w-40 items-center justify-center rounded-full border border-accent/30 bg-pitch lg:flex;
+  }
+
+  .world-ball {
+    @apply h-20 w-20 rounded-full border-4 border-gold bg-accent shadow-glow;
+    background-image:
+      linear-gradient(30deg, transparent 44%, rgba(7, 17, 11, 0.65) 45%, rgba(7, 17, 11, 0.65) 55%, transparent 56%),
+      linear-gradient(150deg, transparent 44%, rgba(7, 17, 11, 0.65) 45%, rgba(7, 17, 11, 0.65) 55%, transparent 56%);
+  }
+
+  .world-ring {
+    @apply absolute rounded-full border border-gold/40;
+  }
+
+  .world-ring-one {
+    @apply h-28 w-28;
+  }
+
+  .world-ring-two {
+    @apply h-36 w-36 border-accent/30;
+  }
+
+  .world-stats {
+    @apply grid grid-cols-2 gap-3;
+  }
+
+  .stat-tile {
+    @apply rounded-md border border-line bg-panelSoft p-3;
+  }
+
+  .stat-tile strong {
+    @apply block text-2xl font-black text-gold;
+  }
+
+  .stat-tile span {
+    @apply text-xs font-bold uppercase tracking-wide text-slate-400;
+  }
+
+  .pool-bar {
+    @apply mb-5 grid gap-3 rounded-md border border-line bg-panel p-4 md:grid-cols-[320px_1fr] md:items-end;
+  }
+
+  .pool-summary {
+    @apply rounded border border-line bg-pitch px-3 py-2 text-sm text-slate-300;
+  }
+
+  .pool-list {
+    @apply grid gap-3;
+  }
+
+  .pool-card {
+    @apply grid gap-3 rounded-md border border-line bg-panelSoft p-4 md:grid-cols-[1fr_auto] md:items-center;
+  }
+
+  .pool-card h3 {
+    @apply font-black text-white;
+  }
+
+  .pool-card p {
+    @apply mt-1 text-sm text-slate-400;
+  }
+
+  .pool-actions {
+    @apply flex items-center gap-2;
+  }
+
+  .pool-badge {
+    @apply rounded bg-gold px-2 py-1 text-xs font-black uppercase text-pitch;
+  }
+
+  .check-row {
+    @apply flex items-center gap-2 text-sm font-bold text-slate-300;
+  }
+
+  .check-row input {
+    @apply h-4 w-4 accent-accent;
+  }
+
   .bracket-scroll {
     @apply overflow-x-auto rounded-md border border-line bg-pitch p-3;
   }

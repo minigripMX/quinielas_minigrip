@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase';
 import { buildStats } from '../lib/scoring';
 
 const initialState = {
+  pools: [],
+  activePool: null,
   matches: [],
   picks: [],
   results: [],
@@ -11,33 +13,76 @@ const initialState = {
 
 export function useQuinielaData() {
   const [state, setState] = useState(initialState);
+  const [selectedPoolId, setSelectedPoolIdState] = useState(() => window.localStorage.getItem('selected_pool_id') ?? '');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const setSelectedPoolId = useCallback((poolId) => {
+    setSelectedPoolIdState(poolId);
+    if (poolId) {
+      window.localStorage.setItem('selected_pool_id', poolId);
+    } else {
+      window.localStorage.removeItem('selected_pool_id');
+    }
+  }, []);
 
   const refresh = useCallback(async () => {
     setError('');
 
-    const [matchesRes, picksRes, resultsRes, profilesRes] = await Promise.all([
-      supabase.from('matches').select('*').order('match_date').order('group_name'),
-      supabase.from('picks').select('*'),
-      supabase.from('results').select('*'),
+    const [poolsRes, profilesRes] = await Promise.all([
+      supabase.from('pools').select('*').order('created_at', { ascending: false }),
       supabase.from('profiles').select('*').order('name'),
     ]);
 
-    const firstError = [matchesRes, picksRes, resultsRes, profilesRes].find((response) => response.error)?.error;
+    const firstBaseError = [poolsRes, profilesRes].find((response) => response.error)?.error;
+    if (firstBaseError) {
+      setError(firstBaseError.message);
+      setLoading(false);
+      return;
+    }
+
+    const pools = poolsRes.data ?? [];
+    const activePool = pools.find((pool) => pool.id === selectedPoolId) ?? pools.find((pool) => pool.is_active) ?? pools[0] ?? null;
+
+    if (activePool && activePool.id !== selectedPoolId) {
+      setSelectedPoolId(activePool.id);
+    }
+
+    if (!activePool) {
+      setState({
+        pools,
+        activePool: null,
+        matches: [],
+        picks: [],
+        results: [],
+        profiles: profilesRes.data ?? [],
+      });
+      setLoading(false);
+      return;
+    }
+
+    const [matchesRes, picksRes, resultsRes] = await Promise.all([
+      supabase.from('matches').select('*').eq('pool_id', activePool.id).order('match_date').order('group_name'),
+      supabase.from('picks').select('*, matches!inner(pool_id)').eq('matches.pool_id', activePool.id),
+      supabase.from('results').select('*, matches!inner(pool_id)').eq('matches.pool_id', activePool.id),
+    ]);
+
+    const firstError = [matchesRes, picksRes, resultsRes].find((response) => response.error)?.error;
     if (firstError) {
       setError(firstError.message);
     } else {
       setState({
+        pools,
+        activePool,
         matches: matchesRes.data ?? [],
-        picks: picksRes.data ?? [],
-        results: resultsRes.data ?? [],
+        picks: stripJoinedMatches(picksRes.data ?? []),
+        results: stripJoinedMatches(resultsRes.data ?? []),
         profiles: profilesRes.data ?? [],
       });
     }
 
     setLoading(false);
-  }, []);
+  }, [selectedPoolId, setSelectedPoolId]);
 
   useEffect(() => {
     refresh();
@@ -47,6 +92,8 @@ export function useQuinielaData() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'picks' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'results' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pools' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, refresh)
       .subscribe();
 
     return () => {
@@ -81,5 +128,15 @@ export function useQuinielaData() {
     loading,
     error,
     refresh,
+    selectedPoolId,
+    setSelectedPoolId,
   };
+}
+
+function stripJoinedMatches(rows) {
+  return rows.map((row) => {
+    const cleanRow = { ...row };
+    delete cleanRow.matches;
+    return cleanRow;
+  });
 }

@@ -114,10 +114,20 @@ Este comando ejecuta `npm run build` y publica `dist` con `gh-pages`. El archivo
 
 ## Mundial completo
 
-`supabase/schema.sql` crea la estructura base. Si ya tienes la app funcionando y quieres cargar el Mundial completo, ejecuta después:
+`supabase/schema.sql` crea la estructura base. Para habilitar varias quinielas al mismo tiempo, ejecuta después:
+
+```text
+supabase/multi-pools.sql
+```
+
+Luego, si quieres cargar el Mundial completo en la quiniela activa, ejecuta:
 
 ```text
 supabase/full-world-cup-2026.sql
 ```
 
-Ese script reemplaza los partidos actuales por 104 partidos: 72 de fase de grupos con nombres de selecciones, 16 de ronda de 32, 8 de octavos, 4 de cuartos, 2 semifinales, tercer lugar y final. Conserva usuarios/perfiles, pero borra picks/results existentes porque dependen de los partidos anteriores.
+Ese script reemplaza los partidos de la quiniela activa por 104 partidos: 72 de fase de grupos con nombres de selecciones, 16 de ronda de 32, 8 de octavos, 4 de cuartos, 2 semifinales, tercer lugar y final. Conserva usuarios/perfiles y otras quinielas.
+
+## Multiples quinielas
+
+El admin puede crear quinielas desde la pestaña `Quinielas`, seleccionar la quiniela activa y opcionalmente copiar el calendario de la quiniela actual. Cada quiniela tiene sus propios partidos, resultados, picks y tabla.
