@@ -109,6 +109,69 @@ body {
     @apply text-sm leading-6 text-slate-300;
   }
 
+  .image-guide {
+    @apply mb-4 rounded border border-line bg-pitch px-3 py-2 text-sm leading-6 text-slate-300;
+  }
+
+  .image-guide strong {
+    @apply text-gold;
+  }
+
+  .world-image-grid {
+    @apply grid gap-4 md:grid-cols-2;
+  }
+
+  .world-image-card {
+    @apply overflow-hidden rounded-md border border-line bg-panelSoft;
+  }
+
+  .world-image-card img,
+  .image-placeholder {
+    @apply h-56 w-full object-cover;
+  }
+
+  .image-placeholder {
+    @apply flex items-center justify-center text-white;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255, 214, 0, 0.35), transparent 28%),
+      radial-gradient(circle at 80% 30%, rgba(0, 200, 83, 0.35), transparent 30%),
+      linear-gradient(135deg, #07110b, #17231d 55%, #26362d);
+  }
+
+  .image-placeholder-2 {
+    background:
+      radial-gradient(circle at 30% 30%, rgba(0, 200, 83, 0.38), transparent 30%),
+      linear-gradient(135deg, #12251a, #0b1010 50%, #004b2a);
+  }
+
+  .image-placeholder-3 {
+    background:
+      radial-gradient(circle at 50% 30%, rgba(255, 214, 0, 0.4), transparent 24%),
+      linear-gradient(135deg, #221806, #07110b 55%, #0e2a19);
+  }
+
+  .image-placeholder-4 {
+    background:
+      radial-gradient(circle at 70% 20%, rgba(255, 214, 0, 0.35), transparent 28%),
+      linear-gradient(135deg, #07110b, #004b2a, #17231d);
+  }
+
+  .world-image-card div:last-child {
+    @apply p-4;
+  }
+
+  .world-image-card h3 {
+    @apply text-lg font-black text-white;
+  }
+
+  .world-image-card p {
+    @apply mt-1 text-sm text-slate-300;
+  }
+
+  .world-image-card span {
+    @apply mt-3 inline-block rounded bg-pitch px-2 py-1 text-xs font-bold text-gold;
+  }
+
   .locked {
     @apply inline-flex items-center gap-1 text-gold;
   }

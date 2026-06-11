@@ -4,6 +4,7 @@ import {
   Check,
   GitFork,
   HelpCircle,
+  ImageIcon,
   Layers,
   Lock,
   LogOut,
@@ -21,6 +22,7 @@ import { useQuinielaData } from './hooks/useQuinielaData';
 
 const tabs = [
   { id: 'guia', label: 'Guia', icon: HelpCircle },
+  { id: 'imagenes', label: 'Imagenes', icon: ImageIcon },
   { id: 'ranking', label: 'Tabla', icon: Trophy },
   { id: 'quiniela', label: 'Mi quiniela', icon: Check },
   { id: 'partidos', label: 'Partidos', icon: CalendarDays },
@@ -103,6 +105,7 @@ function Dashboard({ profile }) {
         {!data.loading ? <WorldCupOverview data={data} /> : null}
         {!data.loading ? <PoolSelector data={data} /> : null}
         {!data.loading && active === 'guia' ? <Guide /> : null}
+        {!data.loading && active === 'imagenes' ? <WorldImages /> : null}
         {!data.loading && active === 'ranking' ? <Ranking stats={data.stats.filter((user) => user.role !== 'admin')} /> : null}
         {!data.loading && active === 'quiniela' ? <MyPicks profile={profile} data={data} /> : null}
         {!data.loading && active === 'partidos' ? <Matches data={data} /> : null}
@@ -112,6 +115,62 @@ function Dashboard({ profile }) {
         {!data.loading && active === 'usuarios' ? <UsersAdmin data={data} /> : null}
       </main>
     </div>
+  );
+}
+
+const worldImageSections = [
+  {
+    title: 'Estadios',
+    subtitle: 'Sedes y ambiente de partido',
+    image: '',
+    filename: 'public/images/estadios.jpg',
+  },
+  {
+    title: 'Aficion',
+    subtitle: 'Colores, banderas y energia mundialista',
+    image: '',
+    filename: 'public/images/aficion.jpg',
+  },
+  {
+    title: 'Camino a la final',
+    subtitle: 'Momentos clave de eliminatoria',
+    image: '',
+    filename: 'public/images/final.jpg',
+  },
+  {
+    title: 'Quiniela Minigrip',
+    subtitle: 'Identidad interna del torneo',
+    image: '',
+    filename: 'public/images/minigrip.jpg',
+  },
+];
+
+function WorldImages() {
+  return (
+    <section className="section">
+      <SectionTitle icon={ImageIcon} title="Imagenes del Mundial" />
+      <div className="image-guide">
+        Agrega tus imagenes en <strong>public/images</strong> y coloca la ruta en el arreglo <strong>worldImageSections</strong> de <strong>src/App.jsx</strong>.
+      </div>
+      <div className="world-image-grid">
+        {worldImageSections.map((item, index) => (
+          <article className="world-image-card" key={item.title}>
+            {item.image ? (
+              <img alt={item.title} src={item.image} />
+            ) : (
+              <div className={`image-placeholder image-placeholder-${index + 1}`}>
+                <Trophy size={42} />
+              </div>
+            )}
+            <div>
+              <h3>{item.title}</h3>
+              <p>{item.subtitle}</p>
+              <span>{item.filename}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -186,7 +245,7 @@ function Guide() {
         </article>
         <article className="guide-item">
           <h3>2. Bloqueo de votos</h3>
-          <p>Puedes cambiar tu voto mientras el partido no tenga resultado. Cuando el admin captura marcador, ese partido queda cerrado.</p>
+          <p>Puedes cambiar tu voto hasta antes del inicio del partido. Al comenzar, queda cerrado aunque el admin todavia no capture marcador.</p>
         </article>
         <article className="guide-item">
           <h3>3. Puntos y tabla</h3>
@@ -290,7 +349,8 @@ function MyPicks({ profile, data }) {
   const teamResolver = buildTournamentResolver(data.matches, data.results);
 
   async function savePick(matchId, pick) {
-    if (data.resultByMatch.has(matchId)) return;
+    const match = data.matches.find((item) => item.id === matchId);
+    if (!canEditPick(match, data.resultByMatch)) return;
 
     const existing = myPicks.get(matchId);
     if (existing) {
@@ -315,12 +375,13 @@ function MyPicks({ profile, data }) {
             {matches.map((match) => {
               const result = data.resultByMatch.get(match.id);
               const selected = myPicks.get(match.id)?.pick;
+              const locked = !canEditPick(match, data.resultByMatch);
               const resolved = Boolean(result);
               const hit = resolved && selected === result.outcome;
 
               return (
                 <article className="match-card" key={match.id}>
-                  <MatchMeta match={match} right={resolved ? <span className="locked"><Lock size={13} /> Cerrado</span> : <span>Abierto</span>} />
+                  <MatchMeta match={match} right={locked ? <span className="locked"><Lock size={13} /> Cerrado</span> : <span>Abierto</span>} />
                   <div className="teams">
                     <TeamName value={match.home_team} resolver={teamResolver} />
                     <span>vs</span>
@@ -330,7 +391,7 @@ function MyPicks({ profile, data }) {
                     {['1', 'x', '2'].map((pick) => (
                       <button
                         className={`pick-button ${selected === pick ? 'pick-selected' : ''}`}
-                        disabled={resolved}
+                        disabled={locked}
                         key={pick}
                         onClick={() => savePick(match.id, pick)}
                       >
@@ -1044,6 +1105,12 @@ function compareStandingRows(a, b) {
 function isGroupComplete(matches, resultByMatch, group) {
   const groupMatches = matches.filter((match) => (match.stage ?? 'group') === 'group' && match.group_name === group);
   return groupMatches.length === 6 && groupMatches.every((match) => resultByMatch.has(match.id));
+}
+
+function canEditPick(match, resultByMatch) {
+  if (!match) return false;
+  if (resultByMatch.has(match.id)) return false;
+  return new Date(match.match_date).getTime() > Date.now();
 }
 
 function getMatchLabel(match) {

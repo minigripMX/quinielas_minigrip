@@ -54,6 +54,10 @@ returns trigger
 language plpgsql
 as $$
 begin
+  if exists (select 1 from public.matches where id = new.match_id and match_date <= now()) then
+    raise exception 'This match has already started';
+  end if;
+
   if exists (select 1 from public.results where match_id = new.match_id) then
     raise exception 'This match already has a result';
   end if;
