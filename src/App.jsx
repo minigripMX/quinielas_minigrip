@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   CalendarDays,
+  CalendarClock,
   Check,
   GitFork,
   HelpCircle,
@@ -28,6 +29,7 @@ const tabs = [
   { id: 'partidos', label: 'Partidos', icon: CalendarDays },
   { id: 'llaves', label: 'Llaves', icon: GitFork },
   { id: 'quinielas-admin', label: 'Quinielas', icon: Layers, admin: true },
+  { id: 'calendario-admin', label: 'Calendario', icon: CalendarClock, admin: true },
   { id: 'resultados', label: 'Resultados', icon: Shield, admin: true },
   { id: 'usuarios', label: 'Usuarios', icon: Users, admin: true },
 ];
@@ -111,6 +113,7 @@ function Dashboard({ profile }) {
         {!data.loading && active === 'partidos' ? <Matches data={data} /> : null}
         {!data.loading && active === 'llaves' ? <KnockoutBoard /> : null}
         {!data.loading && active === 'quinielas-admin' ? <PoolsAdmin data={data} /> : null}
+        {!data.loading && active === 'calendario-admin' ? <CalendarAdmin data={data} /> : null}
         {!data.loading && active === 'resultados' ? <ResultsAdmin data={data} /> : null}
         {!data.loading && active === 'usuarios' ? <UsersAdmin data={data} /> : null}
       </main>
@@ -687,6 +690,90 @@ function PoolsAdmin({ data }) {
   );
 }
 
+function CalendarAdmin({ data }) {
+  const [phase, setPhase] = useState('group');
+  const visibleMatches = filterMatchesByPhase(data.matches, phase);
+  const groups = groupMatches(visibleMatches);
+
+  return (
+    <section className="space-y-5">
+      <div className="section">
+        <SectionTitle icon={CalendarClock} title="Calendario y equipos" />
+        <PhaseFilter value={phase} onChange={setPhase} />
+      </div>
+
+      {Object.entries(groups).map(([group, matches]) => (
+        <div className="section" key={group}>
+          <h3 className="mb-4 text-lg font-black text-gold">{group}</h3>
+          <div className="space-y-3">
+            {matches.map((match) => (
+              <CalendarMatchForm data={data} key={match.id} match={match} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function CalendarMatchForm({ data, match }) {
+  const [form, setForm] = useState({
+    home_team: match.home_team,
+    away_team: match.away_team,
+    match_date: toDateTimeLocal(match.match_date),
+  });
+  const [message, setMessage] = useState('');
+
+  async function saveMatch(event) {
+    event.preventDefault();
+    setMessage('');
+
+    const { error } = await supabase
+      .from('matches')
+      .update({
+        home_team: form.home_team.trim(),
+        away_team: form.away_team.trim(),
+        match_date: new Date(form.match_date).toISOString(),
+      })
+      .eq('id', match.id);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage('Guardado.');
+    data.refresh();
+  }
+
+  return (
+    <form className="calendar-row" onSubmit={saveMatch}>
+      <div className="calendar-title">
+        <span className="match-number-inline">{formatMatchNumber(match)}</span>
+        <span>{getMatchLabel(match)}</span>
+      </div>
+      <input
+        className="field-input"
+        value={form.home_team}
+        onChange={(event) => setForm({ ...form, home_team: event.target.value })}
+      />
+      <input
+        className="field-input"
+        value={form.away_team}
+        onChange={(event) => setForm({ ...form, away_team: event.target.value })}
+      />
+      <input
+        className="field-input"
+        type="datetime-local"
+        value={form.match_date}
+        onChange={(event) => setForm({ ...form, match_date: event.target.value })}
+      />
+      <button className="primary-button">Guardar</button>
+      {message ? <span className="calendar-message">{message}</span> : null}
+    </form>
+  );
+}
+
 function ResultsAdmin({ data }) {
   const [phase, setPhase] = useState('group');
   const visibleMatches = filterMatchesByPhase(data.matches, phase);
@@ -940,6 +1027,12 @@ function filterMatchesByPhase(matches, phase) {
 function formatMatchNumber(match) {
   if (!match.match_number) return 'M--';
   return `M${String(match.match_number).padStart(3, '0')}`;
+}
+
+function toDateTimeLocal(value) {
+  const date = new Date(value);
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
 }
 
 function buildTournamentResolver(matches, results) {

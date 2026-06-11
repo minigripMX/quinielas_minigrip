@@ -232,6 +232,18 @@ body {
     @apply grid gap-3 rounded-md border border-line bg-panelSoft p-3 md:grid-cols-[1fr_auto] md:items-center;
   }
 
+  .calendar-row {
+    @apply grid gap-3 rounded-md border border-line bg-panelSoft p-3 lg:grid-cols-[170px_1fr_1fr_220px_auto] lg:items-center;
+  }
+
+  .calendar-title {
+    @apply flex flex-wrap items-center gap-2 text-sm font-black text-slate-200;
+  }
+
+  .calendar-message {
+    @apply text-xs font-bold text-accent lg:col-span-5;
+  }
+
   .score-inputs {
     @apply flex items-center gap-2;
   }
