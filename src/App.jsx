@@ -99,7 +99,7 @@ function Dashboard({ profile }) {
         {data.loading ? <ShellMessage text="Cargando quiniela..." compact /> : null}
         {data.error ? <Notice tone="danger">{data.error}</Notice> : null}
         {!data.loading && active === 'guia' ? <Guide /> : null}
-        {!data.loading && active === 'ranking' ? <Ranking stats={data.stats} /> : null}
+        {!data.loading && active === 'ranking' ? <Ranking stats={data.stats.filter((user) => user.role !== 'admin')} /> : null}
         {!data.loading && active === 'quiniela' ? <MyPicks profile={profile} data={data} /> : null}
         {!data.loading && active === 'partidos' ? <Matches data={data} /> : null}
         {!data.loading && active === 'llaves' ? <KnockoutBoard /> : null}
